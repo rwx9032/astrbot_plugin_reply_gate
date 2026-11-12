@@ -1,0 +1,169 @@
+{
+  "enabled": {
+    "description": "启用回复判断",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后本插件不会让机器人在群里主动接话。被 @ 的正常回复不受影响。更方便的设置方式：在插件页打开「回复判断」面板。"
+  },
+  "persona_aliases": {
+    "description": "人格别称",
+    "type": "dict",
+    "items": {},
+    "default": {},
+    "hint": "机器人的正式名字自动取当前会话生效的人格名。这里按人格补充别称：键填人格名，值填别称，多个用逗号隔开。例如 小星 → 星星，阿星。"
+  },
+  "extra_names": {
+    "description": "所有人格通用的额外名字",
+    "type": "list",
+    "items": {
+      "type": "string"
+    },
+    "default": [],
+    "hint": "不管当前是哪个人格，消息里出现这些词都算在叫机器人。"
+  },
+  "user_blacklist": {
+    "description": "用户黑名单",
+    "type": "list",
+    "items": {
+      "type": "string"
+    },
+    "default": [],
+    "hint": "名单里的人在群里说话时，机器人不会主动接话。填用户 ID（QQ 官方机器人是 32 位的 openid，不是 QQ 号）。面板里可以从「最近发言的人」直接拉黑。"
+  },
+  "group_whitelist": {
+    "description": "群白名单",
+    "type": "list",
+    "items": {
+      "type": "string"
+    },
+    "default": [],
+    "hint": "留空表示所有群都生效。填了之后只在这些群里主动接话。填群 ID 或会话 ID。"
+  },
+  "group_blacklist": {
+    "description": "群黑名单",
+    "type": "list",
+    "items": {
+      "type": "string"
+    },
+    "default": [],
+    "hint": "这些群里不主动接话。填群 ID 或会话 ID。"
+  },
+  "judge_enabled": {
+    "description": "启用模型判断",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后只按名单和规则过滤：叫了机器人名字就回，其余按下面的随机概率。"
+  },
+  "judge_when_at_with_others": {
+    "description": "被 @ 的同时还 @ 了别人时，也判断要不要回",
+    "type": "bool",
+    "default": true,
+    "hint": "比如「@小明，和 @机器人 说句话」其实是对小明说的。打开后这类消息也交给模型判断，不是对机器人说的就不回。只 @ 了机器人的消息不受影响，照常回复。判断失败时照常回复。"
+  },
+  "use_decision_model": {
+    "description": "优先使用判断模型",
+    "type": "bool",
+    "default": true,
+    "hint": "使用 AstrBot 里配置的判断模型（System One）。没有配置或调用失败时，会退回下面的对话模型。"
+  },
+  "decision_provider_id": {
+    "description": "判断模型 ID",
+    "type": "string",
+    "default": "",
+    "hint": "留空表示使用 AstrBot 的默认判断模型。判断模型的接口地址和密钥在 AstrBot 的「模型提供商」里配置。"
+  },
+  "threshold": {
+    "description": "回复阈值",
+    "type": "float",
+    "default": 0.5,
+    "hint": "判断模型认为「这句话是对机器人说的」的概率达到这个值才回复。调高更安静，调低更爱说话。范围 0～1。"
+  },
+  "open_threshold": {
+    "description": "开放问题 / 新话题的判定线",
+    "type": "float",
+    "default": 0.6,
+    "hint": "判断模型认为「这是对全群说的」或「这是个新话题」的概率达到这个值，才算开放问题 / 新话题，再按下面的接话概率接话。调低会把更多话当成可以接的。范围 0～1。"
+  },
+  "open_question_chance": {
+    "description": "开放问题 / 新话题的接话概率",
+    "type": "float",
+    "default": 0.5,
+    "hint": "对全群的开放问题（例如「吃了吗」「有人知道……吗」），或者有人开了个新话题（不是对某个人说的），机器人按这个概率接话。0 表示从不接。受接话冷却限制。"
+  },
+  "llm_fallback_enabled": {
+    "description": "判断模型不可用时退回对话模型",
+    "type": "bool",
+    "default": true
+  },
+  "image_use_llm": {
+    "description": "带图片的消息交给对话模型判断",
+    "type": "bool",
+    "default": true,
+    "hint": "判断模型看不到图片。打开后，带图的消息会连同图片发给对话模型判断（需要开启上一项，并选能看图的模型）；对话模型失败时再退回判断模型，只看文字。"
+  },
+  "llm_provider_id": {
+    "description": "退回时使用的对话模型",
+    "type": "string",
+    "default": "",
+    "_special": "select_provider",
+    "hint": "建议选便宜、快的模型。留空表示使用当前会话的对话模型。"
+  },
+  "judge_timeout": {
+    "description": "判断超时（秒）",
+    "type": "float",
+    "default": 8
+  },
+  "reply_on_error": {
+    "description": "判断失败时仍然回复",
+    "type": "bool",
+    "default": false,
+    "hint": "模型超时或出错时怎么办。默认不回复。"
+  },
+  "extra_rules": {
+    "description": "自定义判断规则",
+    "type": "text",
+    "default": "",
+    "hint": "用大白话补充规则，会一并交给模型。例如：有人问店里的事情时要回应。"
+  },
+  "context_messages": {
+    "description": "参考的群聊条数",
+    "type": "int",
+    "default": 8,
+    "hint": "判断时带上最近多少条群消息（含机器人自己说的）。"
+  },
+  "min_length": {
+    "description": "最短字数",
+    "type": "int",
+    "default": 2,
+    "hint": "去掉标点和表情后少于这个字数的消息不接话。纯「哈哈哈」之类也不接。"
+  },
+  "cooldown_seconds": {
+    "description": "接话冷却（秒）",
+    "type": "float",
+    "default": 30,
+    "hint": "主动接话一次后，这段时间内不再接开放问题和新话题。对机器人说的话（叫名字、引用它、接着它的话）不受限制。"
+  },
+  "probability_without_judge": {
+    "description": "未开启模型判断时的随机概率",
+    "type": "float",
+    "default": 0.0,
+    "hint": "只在关闭模型判断时生效。范围 0～1。"
+  },
+  "log_decisions": {
+    "description": "把每次判断写进日志",
+    "type": "bool",
+    "default": true
+  },
+  "debug_enabled": {
+    "description": "调试模式",
+    "type": "bool",
+    "default": false,
+    "hint": "打开后保存每次判断的完整过程：交给模型的上下文、@ 了谁、判断标准、模型结果。可在面板的「调试」页查看和导出。记录里包含群聊原文，排查完建议关闭并清空。"
+  },
+  "debug_max_records": {
+    "description": "最多保存多少条调试记录",
+    "type": "int",
+    "default": 200,
+    "hint": "超过后自动删掉最早的。范围 10～2000。"
+  }
+}

@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>回复判断</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot" id="run-dot"></span>
+        <div>
+          <h1>回复判断</h1>
+          <p class="sub" id="subtitle">加载中…</p>
+        </div>
+      </div>
+      <div class="actions">
+        <label class="switch" title="总开关">
+          <input type="checkbox" id="master-switch" />
+          <span class="slider"></span>
+          <span class="switch-label" id="master-label">已启用</span>
+        </label>
+        <button class="btn ghost" id="btn-refresh">刷新</button>
+      </div>
+    </header>
+
+    <div id="warnings"></div>
+
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="overview">概览</button>
+      <button class="tab" data-tab="lists">名单</button>
+      <button class="tab" data-tab="settings">判断设置</button>
+      <button class="tab" data-tab="test">试一试</button>
+      <button class="tab" data-tab="debug">调试 <span class="badge" id="debug-badge" hidden>开</span></button>
+    </nav>
+
+    <main>
+      <!-- 概览 -->
+      <section class="pane active" data-pane="overview">
+        <div class="cards" id="stat-cards"></div>
+        <div class="card">
+          <div class="card-head">
+            <h2>最近的判断</h2>
+            <div class="toolbar">
+              <select id="history-filter">
+                <option value="all">全部</option>
+                <option value="reply">只看回复的</option>
+                <option value="model">只看模型判断的</option>
+              </select>
+              <button class="btn ghost small" id="btn-clear-history">清空记录</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="history-table">
+              <thead>
+                <tr><th>时间</th><th>谁</th><th>说了什么</th><th>结果</th><th>依据</th><th></th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="empty" id="history-empty" hidden>还没有判断记录。群里有人说话（且没有 @ 机器人）后会出现在这里。</p>
+        </div>
+      </section>
+
+      <!-- 名单 -->
+      <section class="pane" data-pane="lists">
+        <div class="card">
+          <div class="card-head">
+            <h2>用户黑名单</h2>
+            <span class="muted">名单里的人说话时，机器人不会主动接话；@ 机器人时照常回复。</span>
+          </div>
+          <div class="chips" id="blacklist-chips"></div>
+          <form class="inline-form" id="blacklist-form">
+            <input type="text" id="blacklist-input" placeholder="手动填用户 ID（QQ 官方机器人是 32 位 openid，不是 QQ 号）" />
+            <button class="btn primary" type="submit">加入</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>最近发言的人</h2>
+            <input type="search" id="user-search" placeholder="搜昵称或 ID" />
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="user-table">
+              <thead><tr><th>昵称</th><th>用户 ID</th><th>发言</th><th>最后出现</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="empty" id="user-empty" hidden>还没有记录。插件启动后群里发言的人会出现在这里。</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>群</h2>
+            <span class="muted" id="group-mode"></span>
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="group-table">
+              <thead><tr><th>群 ID</th><th>人格</th><th>消息</th><th>最后活跃</th><th>白名单</th><th>黑名单</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="empty" id="group-empty" hidden>还没有群的记录。</p>
+        </div>
+      </section>
+
+      <!-- 判断设置 -->
+      <section class="pane" data-pane="settings">
+        <form id="settings-form">
+          <div class="card">
+            <div class="card-head">
+              <h2>机器人的名字</h2>
+              <span class="muted">正式名字跟着会话的人格走，在 AstrBot 的「人格」里改。这里只补充别称。</span>
+            </div>
+            <div id="persona-rows"></div>
+            <label class="field">
+              <span>所有人格通用的额外名字</span>
+              <input type="text" name="extra_names" placeholder="多个用逗号隔开，可以留空" />
+            </label>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>判断模型</h2>
+              <span class="muted">接口地址和密钥在 AstrBot 的「模型提供商」里配置，这里选用哪一个。</span>
+            </div>
+            <label class="field check">
+              <input type="checkbox" name="judge_enabled" />
+              <span>启用模型判断<small>关闭后：叫了名字就回，其余按随机概率</small></span>
+            </label>
+            <label class="field check">
+              <input type="checkbox" name="judge_when_at_with_others" />
+              <span>被 @ 的同时还 @ 了别人时，也判断要不要回<small>比如「@小明，和 @机器人 说句话」其实是对小明说的。只 @ 了机器人的消息照常回复；判断失败时也照常回复。</small></span>
+            </label>
+            <label class="field check">
+              <input type="checkbox" name="use_decision_model" />
+              <span>优先使用判断模型（System One）</span>
+            </label>
+            <label class="field">
+              <span>判断模型</span>
+              <select name="decision_provider_id" id="decision-select"></select>
+            </label>
+            <label class="field">
+              <span>回复阈值 <b id="threshold-value"></b><small>模型认为「这句话是对机器人说的」的概率达到这个值才回复。调高更安静，调低更爱说话。</small></span>
+              <input type="range" name="threshold" min="0" max="1" step="0.05" />
+            </label>
+            <label class="field">
+              <span>开放问题 / 新话题的判定线 <b id="open-threshold-value"></b><small>模型认为「这是对全群说的」或「这是个新话题」的概率达到这个值，才算可以接的话，再按下面的接话概率接。调低会接得更多。</small></span>
+              <input type="range" name="open_threshold" min="0" max="1" step="0.05" />
+            </label>
+            <label class="field">
+              <span>开放问题 / 新话题的接话概率 <b id="open-chance-value"></b><small>「吃了吗」「有人知道……吗」这类对全群说的话，或者有人开了个新话题（不是对某个人说的），机器人按这个概率接话。0 表示从不接。</small></span>
+              <input type="range" name="open_question_chance" min="0" max="1" step="0.05" />
+            </label>
+            <label class="field check">
+              <input type="checkbox" name="llm_fallback_enabled" />
+              <span>判断模型不可用时，退回对话模型判断</span>
+            </label>
+            <label class="field check">
+              <input type="checkbox" name="image_use_llm" />
+              <span>带图片的消息交给对话模型判断<small>判断模型看不到图片。打开后会把图片一起发给下面的对话模型，要选能看图的模型。</small></span>
+            </label>
+            <label class="field">
+              <span>退回时用的对话模型<small>建议选便宜、快的模型</small></span>
+              <select name="llm_provider_id" id="llm-select"></select>
+            </label>
+            <div class="grid2">
+              <label class="field">
+                <span>判断超时（秒）</span>
+                <input type="number" name="judge_timeout" min="1" max="60" step="1" />
+              </label>
+              <label class="field check">
+                <input type="checkbox" name="reply_on_error" />
+                <span>判断失败时仍然回复</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h2>规则</h2></div>
+            <div class="grid3">
+              <label class="field">
+                <span>接话冷却（秒）<small>只限制开放问题和新话题，对机器人说的话不受限制</small></span>
+                <input type="number" name="cooldown_seconds" min="0" max="3600" step="5" />
+              </label>
+              <label class="field">
+                <span>最短字数<small>纯「哈哈哈」也不接</small></span>
+                <input type="number" name="min_length" min="0" max="50" step="1" />
+              </label>
+              <label class="field">
+                <span>参考的群聊条数</span>
+                <input type="number" name="context_messages" min="0" max="30" step="1" />
+              </label>
+            </div>
+            <label class="field">
+              <span>自定义判断规则<small>用大白话写，会一并交给模型。例如：有人问店里的事情时要回应。</small></span>
+              <textarea name="extra_rules" rows="3"></textarea>
+            </label>
+            <label class="field">
+              <span>未开启模型判断时的随机概率 <b id="prob-value"></b></span>
+              <input type="range" name="probability_without_judge" min="0" max="1" step="0.05" />
+            </label>
+            <label class="field check">
+              <input type="checkbox" name="log_decisions" />
+              <span>把每次判断写进 AstrBot 日志</span>
+            </label>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>调试</h2>
+              <span class="muted">记录里包含群聊原文，排查完建议关闭并清空。</span>
+            </div>
+            <label class="field check">
+              <input type="checkbox" name="debug_enabled" />
+              <span>调试模式<small>打开后保存每次判断的完整过程：交给模型的上下文、@ 了谁、判断标准、模型结果。在「调试」页查看。</small></span>
+            </label>
+            <label class="field">
+              <span>最多保存多少条调试记录<small>超过后自动删掉最早的，范围 10～2000</small></span>
+              <input type="number" name="debug_max_records" min="10" max="2000" step="10" />
+            </label>
+          </div>
+
+          <div class="savebar">
+            <span class="muted" id="save-status">没有改动</span>
+            <button class="btn ghost" type="button" id="btn-reset">撤销改动</button>
+            <button class="btn primary" type="submit" id="btn-save">保存</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 试一试 -->
+      <section class="pane" data-pane="test">
+        <div class="card">
+          <div class="card-head">
+            <h2>试一句话</h2>
+            <span class="muted">用当前设置判断一次，不看名单和冷却，也不会真的发消息。</span>
+          </div>
+          <div class="grid2">
+            <label class="field">
+              <span>用哪个人格的名字</span>
+              <select id="test-persona"></select>
+            </label>
+            <label class="field">
+              <span>说话的人</span>
+              <input type="text" id="test-speaker" value="群友" />
+            </label>
+          </div>
+          <label class="field">
+            <span>前面的群聊（可以留空）<small>每行一条，格式「名字：内容」。名字写「机器人」表示机器人自己说的。</small></span>
+            <textarea id="test-context" rows="4" placeholder="甲：推荐本书吧&#10;机器人：《小王子》吧，很短，一个下午就能看完。"></textarea>
+          </label>
+          <label class="field">
+            <span>要判断的这句话<small>可以写「@名字」。同时 @ 了机器人和别人时，按「被 @ 时判断」的标准来判断。</small></span>
+            <input type="text" id="test-text" placeholder="那它和《夜航西飞》比哪本更好读" />
+          </label>
+          <div class="toolbar">
+            <button class="btn primary" id="btn-test">判断一下</button>
+            <button class="btn ghost small" data-example="other">例：对别人说的</button>
+            <button class="btn ghost small" data-example="follow">例：接机器人的话</button>
+            <button class="btn ghost small" data-example="chat">例：别人闲聊</button>
+            <button class="btn ghost small" data-example="at">例：@别人时提到机器人</button>
+          </div>
+          <div class="result" id="test-result" hidden></div>
+        </div>
+      </section>
+
+      <!-- 调试 -->
+      <section class="pane" data-pane="debug">
+        <div class="card">
+          <div class="card-head">
+            <h2>调试记录</h2>
+            <div class="toolbar">
+              <label class="switch" title="调试模式">
+                <input type="checkbox" id="debug-switch" />
+                <span class="slider"></span>
+                <span class="switch-label" id="debug-label">调试模式已关闭</span>
+              </label>
+              <button class="btn ghost small" id="btn-debug-refresh">刷新</button>
+              <button class="btn ghost small" id="btn-debug-export">导出 JSON</button>
+              <button class="btn ghost small danger" id="btn-debug-clear">清空</button>
+            </div>
+          </div>
+          <p class="muted" id="debug-summary"></p>
+          <div id="debug-list"></div>
+          <p class="empty" id="debug-empty" hidden>还没有调试记录。打开调试模式后，群里的每次判断都会记在这里。</p>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" hidden></div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
